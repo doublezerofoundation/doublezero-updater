@@ -1,0 +1,32 @@
+name: doublezero-updater
+arch: amd64
+platform: linux
+version: ${VERSION}
+maintainer: DoubleZero Foundation <contact@doublezero.xyz>
+description: Auto-updater sidecar for DoubleZero packages
+vendor: DoubleZero Foundation
+homepage: https://doublezero.xyz
+license: Apache-2.0
+
+depends:
+  - curl
+  - python3
+  - apt
+
+contents:
+  - src: scripts/update.sh
+    dst: /usr/lib/doublezero-updater/update.sh
+    file_info:
+      mode: 0755
+  - src: packaging/systemd/doublezero-updater.service
+    dst: /lib/systemd/system/doublezero-updater.service
+    file_info:
+      mode: 0644
+  - src: packaging/systemd/doublezero-updater.timer
+    dst: /lib/systemd/system/doublezero-updater.timer
+    file_info:
+      mode: 0644
+
+scripts:
+  postinstall: packaging/scripts/postinstall.sh
+  preremove: packaging/scripts/preremove.sh

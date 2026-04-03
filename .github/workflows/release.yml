@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish .deb
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install nfpm
+        run: |
+          curl -sfL https://install.goreleaser.com/github.com/goreleaser/nfpm.sh | sudo bash -s -- -b /usr/local/bin v2.38.0
+
+      - name: Build .deb
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          # Strip leading 'v' from tag for package version
+          export VERSION="${VERSION#v}"
+          nfpm package --packager deb --target doublezero-updater_${VERSION}_amd64.deb
+
+      - name: Publish to Cloudsmith
+        env:
+          CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_TOKEN }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          pip install --quiet cloudsmith-cli
+          VERSION="${VERSION#v}"
+          cloudsmith push deb malbeclabs/doublezero/any-distro/any-version \
+            doublezero-updater_${VERSION}_amd64.deb \
+            --api-key "${CLOUDSMITH_TOKEN}"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          VERSION_PLAIN="${VERSION#v}"
+          gh release create "${VERSION}" \
+            --title "doublezero-updater ${VERSION}" \
+            --generate-notes \
+            doublezero-updater_${VERSION_PLAIN}_amd64.deb

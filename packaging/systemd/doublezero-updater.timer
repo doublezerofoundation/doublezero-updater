@@ -1,0 +1,10 @@
+[Unit]
+Description=DoubleZero auto-updater timer
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=10min
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target
