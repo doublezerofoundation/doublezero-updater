@@ -6,6 +6,7 @@ on:
       - "v*.*.*"
 
 permissions:
+  id-token: write
   contents: write
 
 jobs:
@@ -29,9 +30,15 @@ jobs:
           export VERSION="${VERSION#v}"
           nfpm package --packager deb --target doublezero-updater_${VERSION}_amd64.deb
 
+      - name: Authenticate to Cloudsmith (OIDC)
+        uses: cloudsmith-io/cloudsmith-cli-action@69e169e2ad9bc9a1599c2dff464061a00fe9f8ba # v3.1.1
+        with:
+          oidc-namespace: malbeclabs
+          oidc-service-slug: github-actions-publish
+          export-auth-token: "true"
       - name: Publish to Cloudsmith
         env:
-          CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_TOKEN }}
+          CLOUDSMITH_TOKEN: ${{ env.CLOUDSMITH_API_KEY }}
           VERSION: ${{ github.ref_name }}
         run: |
           pip install --quiet cloudsmith-cli
